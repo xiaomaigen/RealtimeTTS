@@ -79,7 +79,7 @@ class PiperEngine(BaseEngine):
             return 16000
         
         try:
-            with open(self.voice.config_file, 'r') as f:
+            with open(self.voice.config_file, 'r', encoding='utf-8') as f:
                 config = json.load(f)
                 return config.get('audio', {}).get('sample_rate', 16000)
         except (FileNotFoundError, json.JSONDecodeError, KeyError):
