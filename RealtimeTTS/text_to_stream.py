@@ -16,6 +16,7 @@ from .threadsafe_generators import CharIterator, AccumulatingThreadSafeGenerator
 from .stream_player import StreamPlayer, AudioConfiguration
 from typing import Union, Iterator, List
 from .engines import BaseEngine
+import re
 try:
     import pyaudio._portaudio as pa
 except ImportError:
@@ -171,6 +172,12 @@ class TextToAudioStream:
         self.play_lock = threading.Lock()
         self.is_playing_flag = False
         self._volume = 1.0  # Default volume at 100%
+        self.voice_switch_tags = {}
+        self.pause_tags = {}
+        self.voice_tag_start = "["
+        self.voice_tag_end = "]"
+        self.active_voice_tag = None
+        self.active_voice = None
 
         self._create_iterators()
 
@@ -272,6 +279,122 @@ class TextToAudioStream:
             Self instance.
         """
         self.char_iter.add(text_or_iterator)
+        return self
+
+    def add_voice(self, tag: str, voice):
+        """
+        Registers a voice switch tag.
+
+        Args:
+            tag (str): Tag content without delimiters, for example "angry".
+            voice: Voice object or identifier accepted by the current engine.
+
+        Returns:
+            Self instance.
+        """
+        normalized_tag = tag.strip()
+        if not normalized_tag:
+            raise ValueError("Voice tag must not be empty.")
+
+        self.voice_switch_tags[normalized_tag] = voice
+        return self
+
+    def add_emotion(self, tag: str, voice):
+        """
+        Backward-compatible alias for add_voice().
+        """
+        return self.add_voice(tag, voice)
+
+    def remove_voice(self, tag: str):
+        """
+        Removes a registered voice switch tag.
+
+        Args:
+            tag (str): Tag content without delimiters.
+
+        Returns:
+            Self instance.
+        """
+        self.voice_switch_tags.pop(tag.strip(), None)
+        return self
+
+    def remove_emotion(self, tag: str):
+        """
+        Backward-compatible alias for remove_voice().
+        """
+        return self.remove_voice(tag)
+
+    def clear_voices(self):
+        """
+        Clears all registered voice switch tags.
+
+        Returns:
+            Self instance.
+        """
+        self.voice_switch_tags.clear()
+        return self
+
+    def add_pause(self, tag: str = "pause", duration: float = 0.5):
+        """
+        Registers a pause tag with a default silence duration in seconds.
+
+        Args:
+            tag (str): Tag content without delimiters, for example "pause".
+            duration (float): Pause duration in seconds.
+
+        Returns:
+            Self instance.
+        """
+        normalized_tag = tag.strip()
+        if not normalized_tag:
+            raise ValueError("Pause tag must not be empty.")
+        if duration < 0:
+            raise ValueError("Pause duration must not be negative.")
+
+        self.pause_tags[normalized_tag] = float(duration)
+        return self
+
+    def remove_pause(self, tag: str):
+        """
+        Removes a registered pause tag.
+
+        Args:
+            tag (str): Tag content without delimiters.
+
+        Returns:
+            Self instance.
+        """
+        self.pause_tags.pop(tag.strip(), None)
+        return self
+
+    def clear_pauses(self):
+        """
+        Clears all registered pause tags.
+
+        Returns:
+            Self instance.
+        """
+        self.pause_tags.clear()
+        return self
+
+    def set_voice_tag_delimiters(self, start: str = "[", end: str = "]"):
+        """
+        Configures the delimiters used to detect voice switch tags.
+
+        Args:
+            start (str): Opening delimiter, for example "[" or "**".
+            end (str): Closing delimiter, for example "]" or "**".
+
+        Returns:
+            Self instance.
+        """
+        if not start:
+            raise ValueError("Voice tag start delimiter must not be empty.")
+        if not end:
+            raise ValueError("Voice tag end delimiter must not be empty.")
+
+        self.voice_tag_start = start
+        self.voice_tag_end = end
         return self
 
     def play_async(
@@ -534,9 +657,34 @@ class TextToAudioStream:
                 def synthesize_worker():
                     nonlocal sentence_count
                     while not abort_event.is_set():
-                        sentence = sentence_queue.get()
-                        if sentence is None:  # Sentinel value to stop the worker
+                        sentence_item = sentence_queue.get()
+                        if sentence_item is None:  # Sentinel value to stop the worker
                             break
+
+                        action_type, action_value = sentence_item
+                        if action_type == "voice":
+                            tag, voice = action_value
+                            try:
+                                self._set_active_voice(tag, voice)
+                            except Exception as e:
+                                logging.warning(
+                                    f'failed to switch voice for tag "{tag}": {e}'
+                                )
+                            finally:
+                                sentence_queue.task_done()
+                            continue
+                        if action_type == "pause":
+                            tag, duration = action_value
+                            try:
+                                logging.info(
+                                    f"Applying pause tag '{tag}' for {duration:.3f}s"
+                                )
+                                self._enqueue_silence(duration)
+                            finally:
+                                sentence_queue.task_done()
+                            continue
+
+                        sentence = action_value
 
                         sentence_count += 1
 
@@ -552,10 +700,8 @@ class TextToAudioStream:
                                 if before_sentence_synthesized:
                                     before_sentence_synthesized(sentence)
 
-                                success = self.engine.synthesize(sentence)
+                                success = self.engine.synthesize(sentence, sentence_count)
 
-                                # insert potential silence
-                                stream_format, _, sample_rate = self.engine.get_stream_info()
 
                                 end_sentence_delimeters = ".!?…。¡¿"
                                 mid_sentence_delimeters = ";:,\n()[]{}-“”„”—/|《》"
@@ -568,13 +714,7 @@ class TextToAudioStream:
                                 else:
                                     silence_duration = default_silence_duration
 
-                                if silence_duration > 0:
-                                    silent_samples = int(sample_rate * silence_duration)
-                                    if stream_format==pyaudio.paInt16:
-                                        silent_chunk = np.zeros(silent_samples, dtype=np.int16)
-                                    else:
-                                        silent_chunk = np.zeros(silent_samples, dtype=np.float32)
-                                    self.engine.queue.put(silent_chunk.tobytes())
+                                self._enqueue_silence(silence_duration)
 
 
                                 if success:
@@ -614,6 +754,7 @@ class TextToAudioStream:
 
                                     self.player.stop()
                                     self.load_engine(self.engines[self.engine_index])
+                                    self._reapply_active_voice()
                                     self.player.start()
                                     self.player.on_audio_chunk = self._on_audio_chunk
 
@@ -627,11 +768,17 @@ class TextToAudioStream:
                 for sentence in chunk_generator:
                     if abort_event.is_set():
                         break
-                    sentence = sentence.strip()
-                    if sentence:
-                        sentence_queue.put(sentence)
-                    else:
-                        continue  # Skip empty sentences
+                    actions = self._extract_inline_actions(sentence)
+                    if not actions:
+                        continue
+
+                    for action_type, action_value in actions:
+                        if action_type == "text":
+                            action_value = action_value.strip()
+                            if action_value:
+                                sentence_queue.put((action_type, action_value))
+                        else:
+                            sentence_queue.put((action_type, action_value))
 
                 # Signal to the worker to stop
                 sentence_queue.put(None)
@@ -860,6 +1007,160 @@ class TextToAudioStream:
             self.on_character(char)
 
         self.generated_text += char
+
+    def _extract_inline_actions(self, text: str):
+        """
+        Splits text into synthesis chunks and inline control actions.
+
+        Registered tags are removed from the synthesized text and replaced by
+        engine actions such as voice switches or pauses. Unknown tags remain
+        untouched in the text.
+        """
+        if not text:
+            return []
+
+        if not self.voice_switch_tags and not self.pause_tags:
+            return [("text", text)]
+
+        start_delimiter = self.voice_tag_start
+        end_delimiter = self.voice_tag_end
+        if not start_delimiter or not end_delimiter:
+            return [("text", text)]
+
+        actions = []
+        cursor = 0
+
+        def append_text_action(value: str):
+            if not value:
+                return
+            if actions and actions[-1][0] == "text":
+                actions[-1] = ("text", actions[-1][1] + value)
+            else:
+                actions.append(("text", value))
+
+        while cursor < len(text):
+            tag_start = text.find(start_delimiter, cursor)
+            if tag_start == -1:
+                trailing_text = text[cursor:]
+                append_text_action(trailing_text)
+                break
+
+            tag_content_start = tag_start + len(start_delimiter)
+            tag_end = text.find(end_delimiter, tag_content_start)
+            if tag_end == -1:
+                remaining_text = text[cursor:]
+                append_text_action(remaining_text)
+                break
+
+            tag_content = text[tag_content_start:tag_end]
+            normalized_tag = tag_content.strip()
+            action = self._resolve_inline_action(normalized_tag)
+            tag_end_index = tag_end + len(end_delimiter)
+
+            if action is None:
+                unchanged_text = text[cursor:tag_end_index]
+                append_text_action(unchanged_text)
+                cursor = tag_end_index
+                continue
+
+            preceding_text = text[cursor:tag_start]
+            append_text_action(preceding_text)
+
+            actions.append(action)
+            cursor = tag_end_index
+
+        return actions
+
+    def _resolve_inline_action(self, normalized_tag: str):
+        """
+        Resolves a tag to an inline action if one is registered.
+        """
+        voice = self.voice_switch_tags.get(normalized_tag)
+        if voice is not None:
+            return ("voice", (normalized_tag, voice))
+
+        pause_duration = self.pause_tags.get(normalized_tag)
+        if pause_duration is not None:
+            return ("pause", (normalized_tag, pause_duration))
+
+        pause_override = self._parse_pause_override(normalized_tag)
+        if pause_override is None:
+            return None
+
+        pause_tag, pause_duration = pause_override
+        if pause_tag not in self.pause_tags:
+            return None
+
+        return ("pause", (pause_tag, pause_duration))
+
+    def _parse_pause_override(self, normalized_tag: str):
+        """
+        Parses inline pause overrides like 'pause=0.5', 'pause: 0.5' or 'pause 0.5'.
+        """
+        match = re.fullmatch(
+            r"(?P<tag>.+?)(?:\s*[:=]\s*|\s+)(?P<duration>\d+(?:\.\d+)?)",
+            normalized_tag,
+        )
+        if not match:
+            return None
+
+        pause_tag = match.group("tag").strip()
+        pause_duration = float(match.group("duration"))
+        return pause_tag, pause_duration
+
+    def _extract_voice_switch_actions(self, text: str):
+        """
+        Backward-compatible alias for inline action extraction.
+        """
+        return self._extract_inline_actions(text)
+
+    def _set_active_voice(self, tag: str, voice):
+        """
+        Switches the engine voice and stores the current active mapping.
+        """
+        logging.info(f"Switching voice to tag '{tag}'")
+        self.engine.set_voice(voice)
+        self.active_voice_tag = tag
+        self.active_voice = voice
+
+    def _reapply_active_voice(self):
+        """
+        Reapplies the currently active mapped voice after an engine reload.
+        """
+        if self.active_voice is None:
+            return
+
+        try:
+            self.engine.set_voice(self.active_voice)
+        except Exception as exc:
+            logging.warning(
+                f"Could not reapply active voice tag '{self.active_voice_tag}' "
+                f"after engine switch: {exc}"
+            )
+
+    def _enqueue_silence(self, silence_duration: float):
+        """
+        Adds silence of the requested duration to the engine queue.
+        """
+        if silence_duration <= 0:
+            return
+
+        stream_format, channels, sample_rate = self.engine.get_stream_info()
+        if sample_rate <= 0 or stream_format == pyaudio.paCustomFormat:
+            logging.warning(
+                f"Cannot enqueue silence for engine {self.engine.engine_name} "
+                "because the stream format is not PCM."
+            )
+            return
+
+        silent_frames = int(sample_rate * silence_duration)
+        sample_count = silent_frames * max(channels, 1)
+        if stream_format == pyaudio.paInt16:
+            silent_chunk = np.zeros(sample_count, dtype=np.int16)
+        else:
+            silent_chunk = np.zeros(sample_count, dtype=np.float32)
+
+        self.engine.queue.put(silent_chunk.tobytes())
 
     def _is_engine_mpeg(self):
         """

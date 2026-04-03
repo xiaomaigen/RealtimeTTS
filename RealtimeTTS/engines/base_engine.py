@@ -220,12 +220,16 @@ class BaseEngine(ABC, metaclass=BaseInitMeta):
             "The get_stream_info method must be implemented by the derived class."
         )
 
-    def synthesize(self, text: str) -> bool:
+    def synthesize(self, text: str, sentence_count: int = 0) -> bool:
         """
         Synthesizes text to audio stream.
 
         Args:
             text (str): Text to synthesize.
+            sentence_count (int): The count of sentences synthesized so far, used for tracking progress.
+
+        Returns:
+            bool: True if successful, False otherwise.
         """
         self.stop_synthesis_event.clear()
 

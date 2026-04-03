@@ -81,14 +81,18 @@ class ElevenlabsEngine(BaseEngine):
         """
         return pyaudio.paCustomFormat, -1, -1
 
-    def synthesize(self, text: str) -> bool:
+    def synthesize(self, text: str, sentence_count: int = 0) -> bool:
         """
         Synthesizes text to audio stream.
 
         Args:
             text (str): Text to synthesize.
+            sentence_count (int): The count of sentences synthesized so far, used for tracking progress.
+
+        Returns:
+            bool: True if successful, False otherwise.
         """
-        super().synthesize(text)
+        super().synthesize(text, sentence_count)
 
         # NOTE: The new elevenlabs API (v1.0.0+) does not allow setting
         # voice settings (stability, clarity, etc.) per-request on the stream endpoint.

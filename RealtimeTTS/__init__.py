@@ -24,6 +24,7 @@ __all__ = [
     "MiniMaxEngine", "MiniMaxVoice",
     "CartesiaEngine", "CartesiaVoice",
     "FasterQwenEngine", "FasterQwenVoice",
+    "OmniVoiceEngine", "OmniVoiceVoice",
 ]
 
 
@@ -276,6 +277,18 @@ def _load_fasterqwen_engine():
     return FasterQwenEngine
 
 
+def _load_omni_voice_engine():
+    try:
+        from .engines.omnivoice_engine import OmniVoiceEngine, OmniVoiceVoice
+    except ImportError as e:
+        raise ImportError(
+            "Failed to load OmniVoiceEngine and OmniVoiceVoice. "
+            "See README for installation instructions."
+        ) from e
+    globals()["OmniVoiceEngine"] = OmniVoiceEngine
+    globals()["OmniVoiceVoice"] = OmniVoiceVoice
+    return OmniVoiceEngine
+
 # Mapping names to their lazy loader functions.
 _lazy_imports = {
     "SystemEngine": _load_system_engine,
@@ -316,6 +329,8 @@ _lazy_imports = {
     "CartesiaVoice": _load_cartesia_engine,
     "FasterQwenEngine": _load_fasterqwen_engine,
     "FasterQwenVoice": _load_fasterqwen_engine,
+    "OmniVoiceEngine": _load_omni_voice_engine,
+    "OmniVoiceVoice": _load_omni_voice_engine,
 }
 
 

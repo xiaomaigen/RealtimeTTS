@@ -274,16 +274,19 @@ class FasterQwenEngine(BaseEngine):
         """
         return pyaudio.paInt16, 1, 24000
 
-    def synthesize(self, text: str) -> bool:
+    def synthesize(self, text: str, sentence_count: int = 0) -> bool:
         """
-        Synthesizes text into audio data and yields it to the PyAudio queue.
+        Synthesizes text to audio stream.
 
         Args:
-            text (str): The text to be converted to speech.
+            text (str): Text to synthesize.
+            sentence_count (int): The count of sentences synthesized so far, used for tracking progress.
 
         Returns:
             bool: True if successful, False otherwise.
         """
+        super().synthesize(text, sentence_count)
+
         if not self.current_voice:
             print(f"{COLOR_RED}❌ [FasterQwenEngine] No voice set. Please provide a FasterQwenVoice configuration.{COLOR_RESET}")
             return False

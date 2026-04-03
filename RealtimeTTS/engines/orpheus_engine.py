@@ -101,17 +101,18 @@ class OrpheusEngine(BaseEngine):
         """
         return pyaudio.paInt16, 1, SAMPLE_RATE
 
-    def synthesize(self, text: str) -> bool:
+    def synthesize(self, text: str, sentence_count: int = 0) -> bool:
         """
-        Convert text to speech and stream audio data.
+        Synthesizes text to audio stream.
 
         Args:
-            text (str): The input text to be synthesized.
+            text (str): Text to synthesize.
+            sentence_count (int): The count of sentences synthesized so far, used for tracking progress.
 
         Returns:
-            bool: True if synthesis was successful, False otherwise.
+            bool: True if successful, False otherwise.
         """
-        super().synthesize(text)
+        super().synthesize(text, sentence_count)
 
         try:
             # Process tokens and put generated audio chunks into the queue

@@ -22,6 +22,7 @@ __all__ = [
     "MiniMaxEngine", "MiniMaxVoice",
     "CartesiaEngine", "CartesiaVoice",
     "FasterQwenEngine", "FasterQwenVoice"
+    "OmniVoiceEngine", "OmniVoiceVoice",
 ]
 
 
@@ -166,6 +167,12 @@ def _load_fasterqwen_engine():
     return FasterQwenEngine
 
 
+def _load_omni_voice_engine():
+    from .omnivoice_engine import OmniVoiceEngine, OmniVoiceVoice
+    globals()["OmniVoiceEngine"] = OmniVoiceEngine
+    globals()["OmniVoiceVoice"] = OmniVoiceVoice
+    return OmniVoiceEngine
+
 # Map attribute names to lazy loader functions.
 _lazy_imports = {
     "AzureEngine": _load_azure_engine,
@@ -208,6 +215,8 @@ _lazy_imports = {
     "CartesiaVoice": _load_cartesia_engine,
     "FasterQwenEngine": _load_fasterqwen_engine,
     "FasterQwenVoice": _load_fasterqwen_engine,
+    "OmniVoiceEngine": _load_omni_voice_engine,
+    "OmniVoiceVoice": _load_omni_voice_engine,    
 }
 
 

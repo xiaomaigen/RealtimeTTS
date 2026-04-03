@@ -269,16 +269,19 @@ class KokoroEngine(BaseEngine):
         # Kokoro uses 24 kHz sampling rate, mono channel, with 16-bit samples.
         return (pyaudio.paInt16, 1, 24000)
 
-    def synthesize(self, text: str) -> bool:
+    def synthesize(self, text: str, sentence_count: int = 0) -> bool:
         """
-        Converts the input text into speech audio, in chunks, placing the data into self.queue.
+        Synthesizes text to audio stream.
 
         Args:
-            text (str): The text string to synthesize.
+            text (str): Text to synthesize.
+            sentence_count (int): The count of sentences synthesized so far, used for tracking progress.
 
         Returns:
-            bool: True if synthesis is successful, False otherwise.
+            bool: True if successful, False otherwise.
         """
+        super().synthesize(text, sentence_count)
+
         start_time = time.time()
         try:
             if self.debug:

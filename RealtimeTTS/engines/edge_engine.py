@@ -88,7 +88,18 @@ class EdgeEngine(BaseEngine):
         """
         return pyaudio.paCustomFormat, -1, -1
 
-    def synthesize(self, text):
+    def synthesize(self, text: str, sentence_count: int = 0) -> bool:
+        """
+        Synthesizes text to audio stream.
+
+        Args:
+            text (str): Text to synthesize.
+            sentence_count (int): The count of sentences synthesized so far, used for tracking progress.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        super().synthesize(text, sentence_count)
 
         self.on_playback_started = False
 

@@ -35,7 +35,10 @@ snac>=1.2.1
 faster-qwen3-tts>=0.2.4
 
 # camb-sdk is for CambEngine
-camb-sdk==1.5.8
+camb-sdk>=1.5.8
+
+# omnivoice is for Omnivoice
+omnivoice>=0.1.1
 
 # fugashi is to support japanese language for KokoroEngine
 fugashi>=1.5.2

@@ -202,14 +202,19 @@ class AzureEngine(BaseEngine):
             print(f"[AzureEngine] Error in _handle_word_boundary: {e}")
             return False
 
-    def synthesize(self, text: str) -> bool:
+    def synthesize(self, text: str, sentence_count: int = 0) -> bool:
         """
-        Synthesizes text to an audio stream, capturing word-level timings.
-        Each timing now includes the actual word, its start time, and an estimated end time.
+        Synthesizes text to audio stream.
 
         Args:
             text (str): Text to synthesize.
+            sentence_count (int): The count of sentences synthesized so far, used for tracking progress.
+
+        Returns:
+            bool: True if successful, False otherwise.
         """
+        super().synthesize(text, sentence_count)
+
         # Set up the Azure TTS configuration.
         speech_config = tts.SpeechConfig(
             subscription=self.speech_key, region=self.service_region

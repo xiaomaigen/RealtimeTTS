@@ -159,17 +159,18 @@ class NeuTTSEngine(BaseEngine):
         """
         return pyaudio.paInt16, 1, 24000
 
-    def synthesize(self, text: str) -> bool:
+    def synthesize(self, text: str, sentence_count: int = 0) -> bool:
         """
-        Synthesize text to audio using voice cloning.
+        Synthesizes text to audio stream.
 
         Args:
-            text: Text to synthesize
+            text (str): Text to synthesize.
+            sentence_count (int): The count of sentences synthesized so far, used for tracking progress.
 
         Returns:
-            True if synthesis succeeded, False otherwise
+            bool: True if successful, False otherwise.
         """
-        super().synthesize(text)
+        super().synthesize(text, sentence_count)
 
         if not self._current_voice:
             logging.error("No voice selected for NeuTTS synthesis")

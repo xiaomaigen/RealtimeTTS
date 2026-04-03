@@ -268,13 +268,19 @@ class StyleTTSEngine(BaseEngine):
         import pyaudio
         return pyaudio.paInt16, 1, 24000
 
-    def synthesize(self, text: str) -> bool:
+    def synthesize(self, text: str, sentence_count: int = 0) -> bool:
         """
-        Synthesizes text to audio stream using the loaded StyleTTS model.
+        Synthesizes text to audio stream.
 
         Args:
             text (str): Text to synthesize.
+            sentence_count (int): The count of sentences synthesized so far, used for tracking progress.
+
+        Returns:
+            bool: True if successful, False otherwise.
         """
+        super().synthesize(text, sentence_count)
+
         audio_float32 = self.inference(
             text,
             alpha=self.alpha,

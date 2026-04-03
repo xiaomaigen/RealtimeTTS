@@ -95,16 +95,19 @@ class PiperEngine(BaseEngine):
         sample_rate = self._get_sample_rate_from_config()
         return pyaudio.paInt16, 1, sample_rate
 
-    def synthesize(self, text: str) -> bool:
+    def synthesize(self, text: str, sentence_count: int = 0) -> bool:
         """
-        Synthesizes text into audio data using Piper.
+        Synthesizes text to audio stream.
 
         Args:
-            text (str): The text to be converted to speech.
+            text (str): Text to synthesize.
+            sentence_count (int): The count of sentences synthesized so far, used for tracking progress.
 
         Returns:
             bool: True if successful, False otherwise.
         """
+        super().synthesize(text, sentence_count)
+
         if not self.voice:
             print("No voice set. Please provide a PiperVoice configuration.")
             return False

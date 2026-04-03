@@ -251,8 +251,19 @@ class ZipVoiceEngine(BaseEngine):
         return pyaudio.paInt16, 1, self.sampling_rate
 
     @torch.inference_mode()
-    def synthesize(self, text: str) -> bool:
-        super().synthesize(text)
+    def synthesize(self, text: str, sentence_count: int = 0) -> bool:
+        """
+        Synthesizes text to audio stream.
+
+        Args:
+            text (str): Text to synthesize.
+            sentence_count (int): The count of sentences synthesized so far, used for tracking progress.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        super().synthesize(text, sentence_count)
+
         try:
             # The prompt features are now pre-loaded, so we just use them.
             if self.current_prompt_features is None or self.current_prompt_features_lens is None:

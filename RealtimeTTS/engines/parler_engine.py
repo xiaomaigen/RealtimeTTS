@@ -70,16 +70,19 @@ class ParlerEngine(BaseEngine):
         """
         return pyaudio.paFloat32, 1, 44100  # Using 32-bit float, mono, 44100 Hz
 
-    def synthesize(self, text: str) -> bool:
+    def synthesize(self, text: str, sentence_count: int = 0) -> bool:
         """
         Synthesizes text to audio stream.
 
         Args:
             text (str): Text to synthesize.
+            sentence_count (int): The count of sentences synthesized so far, used for tracking progress.
 
         Returns:
-            bool: True if synthesis starts successfully, False otherwise.
+            bool: True if successful, False otherwise.
         """
+        super().synthesize(text, sentence_count)
+
         try:
             self._generate_and_queue_audio(text)
             return True

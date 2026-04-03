@@ -104,17 +104,18 @@ class MiniMaxEngine(BaseEngine):
         """
         return pyaudio.paCustomFormat, 1, 32000
 
-    def synthesize(self, text: str) -> bool:
+    def synthesize(self, text: str, sentence_count: int = 0) -> bool:
         """
         Synthesizes text to audio stream.
 
         Args:
             text (str): Text to synthesize.
+            sentence_count (int): The count of sentences synthesized so far, used for tracking progress.
 
         Returns:
-            bool: True if synthesis succeeded.
+            bool: True if successful, False otherwise.
         """
-        super().synthesize(text)
+        super().synthesize(text, sentence_count)
 
         if self.debug:
             print(f"MiniMax synthesizing: \"{COLOR_GREEN}{text}{COLOR_RESET}\"")
