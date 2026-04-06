@@ -82,7 +82,7 @@ extras_require = {
     + [requirements.get("edge-tts", "edge-tts")]
     + [requirements.get("kokoro", "kokoro")]
     + [requirements.get("camb-sdk", "camb-sdk")]
-    + [requirements.get("faster-qwen3-tts", "faster-qwen3-tts")],
+    + [requirements.get("faster-qwen3-tts", "faster-qwen3-tts")]
     + [requirements.get("omnivoice", "omnivoice")],
     "system": base_requirements + [requirements.get("pyttsx3", "pyttsx3")],
     "azure": base_requirements +[requirements.get("azure-cognitiveservices-speech", "azure-cognitiveservices-speech")],
