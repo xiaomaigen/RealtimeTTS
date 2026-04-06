@@ -75,6 +75,31 @@ class EmotionEntry:
 def build_emotion_entries() -> List[EmotionEntry]:
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
+    # Full list of emotions in the dataset (not all are used in this test):
+    # adoration
+    # amazement
+    # amusement
+    # anger
+    # confusion
+    # contentment
+    # cuteness
+    # desire
+    # disappointment
+    # disgust
+    # distress
+    # embarrassment
+    # ecstasy
+    # fear
+    # guilt
+    # interest
+    # neutral
+    # pain
+    # pride
+    # realization
+    # relief
+    # sadness
+    # serenity
+
     entries = [
         EmotionEntry(
             name="neutral",

@@ -8,12 +8,6 @@
 
 *Easy to use, low-latency text-to-speech library for realtime applications*
 
-> ❗ **Project Status: Mostly Community-Driven**
-> 
-> This project is no longer being actively maintained by me due to time constraints. I've taken on too many projects and I have to step back. I will no longer be implementing many features or providing user support.
->
-> I will continue to review and merge high-quality, well-written Pull Requests from the community from time to time. Your contributions are welcome and appreciated!
-
 ## About the Project
 
 RealtimeTTS is a state-of-the-art text-to-speech (TTS) library designed for real-time applications. It stands out in its ability to convert text streams fast into high-quality auditory output with minimal latency.
@@ -143,6 +137,11 @@ This library uses:
   - **ZipVoiceEngine** 🏠: 123M zero‑shot model, state‑of‑the‑art quality
   - **PocketTTSEngine** 🏠: Kyutai Labs 100M model, CPU-optimized with voice cloning
   - **NeuTTSEngine** 🏠: Voice cloning with 3-second reference audio
+  - **CartesiaEngine** 🌐: Fast API based high quality synthesis
+  - **FasterQwenEngine** 🏠: Local fast high quality voice cloning
+  - **ModelsLabEngine** 🌐: API based TTS
+  - **OmnivoiceEngine** 🏠: Hundreds of languages, very high quality voice cloning
+  
 
 🏠 Local processing (no internet required)
 🌐 Requires internet connection
