@@ -40,6 +40,9 @@ camb-sdk>=1.5.8
 # omnivoice is for Omnivoice
 omnivoice>=0.1.1
 
+# typecast-python is for TypecastEngine
+typecast-python>=0.2.0
+
 # fugashi is to support japanese language for KokoroEngine
 fugashi>=1.5.2
 jaconv>=0.5.0

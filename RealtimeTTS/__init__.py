@@ -25,6 +25,7 @@ __all__ = [
     "CartesiaEngine", "CartesiaVoice",
     "FasterQwenEngine", "FasterQwenVoice",
     "OmniVoiceEngine", "OmniVoiceVoice",
+    "TypecastEngine", "TypecastVoice",
 ]
 
 
@@ -289,6 +290,19 @@ def _load_omni_voice_engine():
     globals()["OmniVoiceVoice"] = OmniVoiceVoice
     return OmniVoiceEngine
 
+
+def _load_typecast_engine():
+    try:
+        from .engines.typecast_engine import TypecastEngine, TypecastVoice
+    except ImportError as e:
+        raise ImportError(
+            "Failed to load TypecastEngine and TypecastVoice. "
+            "Make sure the `cast` CLI is installed: https://typecast.ai"
+        ) from e
+    globals()["TypecastEngine"] = TypecastEngine
+    globals()["TypecastVoice"] = TypecastVoice
+    return TypecastEngine
+
 # Mapping names to their lazy loader functions.
 _lazy_imports = {
     "SystemEngine": _load_system_engine,
@@ -331,6 +345,8 @@ _lazy_imports = {
     "FasterQwenVoice": _load_fasterqwen_engine,
     "OmniVoiceEngine": _load_omni_voice_engine,
     "OmniVoiceVoice": _load_omni_voice_engine,
+    "TypecastEngine": _load_typecast_engine,
+    "TypecastVoice": _load_typecast_engine,
 }
 
 

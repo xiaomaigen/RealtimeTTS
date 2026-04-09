@@ -33,6 +33,7 @@ Available engine options include:
 - **cartesia** Cartesia API integration
 - **qwen** Faster Qwen3 TTS integration
 - **omnivoice** Omnivoice TTS integration
+- **typecast** Typecast AI TTS integration
 - **minimal**: Core package only (for custom engine development)
 
 You can install multiple engines by separating them with commas. For example:
@@ -83,7 +84,8 @@ extras_require = {
     + [requirements.get("kokoro", "kokoro")]
     + [requirements.get("camb-sdk", "camb-sdk")]
     + [requirements.get("faster-qwen3-tts", "faster-qwen3-tts")]
-    + [requirements.get("omnivoice", "omnivoice")],
+    + [requirements.get("omnivoice", "omnivoice")]
+    + [requirements.get("typecast-python", "typecast-python")],
     "system": base_requirements + [requirements.get("pyttsx3", "pyttsx3")],
     "azure": base_requirements +[requirements.get("azure-cognitiveservices-speech", "azure-cognitiveservices-speech")],
     "elevenlabs": base_requirements +[requirements.get("elevenlabs", "elevenlabs")],
@@ -96,6 +98,7 @@ extras_require = {
     "minimax": base_requirements + [requirements.get("requests", "requests")],
     "orpheus": base_requirements + [requirements.get("snac", "snac")],
     "omnivoice": base_requirements + [requirements.get("omnivoice", "omnivoice")],
+    "typecast": base_requirements + [requirements.get("typecast-python", "typecast-python")],
     "qwen": base_requirements + [requirements.get("faster-qwen3-tts", "faster-qwen3-tts")],
     "jp": base_requirements +["mecab-python3>=1.0.6", "unidic-lite>=1.0.8", "cutlet", "fugashi>=1.4.0", "jaconv>=0.4.0", "mojimoji>=0.0.13", "pyopenjtalk>=0.4.0"],
     "zh": base_requirements +["pypinyin>=0.53.0", "ordered_set>=4.1.0", "jieba>=0.42.1", "cn2an>=0.5.23"],

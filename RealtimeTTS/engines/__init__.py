@@ -21,8 +21,9 @@ __all__ = [
     "ModelsLabEngine", "ModelsLabVoice",
     "MiniMaxEngine", "MiniMaxVoice",
     "CartesiaEngine", "CartesiaVoice",
-    "FasterQwenEngine", "FasterQwenVoice"
+    "FasterQwenEngine", "FasterQwenVoice",
     "OmniVoiceEngine", "OmniVoiceVoice",
+    "TypecastEngine", "TypecastVoice",
 ]
 
 
@@ -173,6 +174,13 @@ def _load_omni_voice_engine():
     globals()["OmniVoiceVoice"] = OmniVoiceVoice
     return OmniVoiceEngine
 
+
+def _load_typecast_engine():
+    from .typecast_engine import TypecastEngine, TypecastVoice
+    globals()["TypecastEngine"] = TypecastEngine
+    globals()["TypecastVoice"] = TypecastVoice
+    return TypecastEngine
+
 # Map attribute names to lazy loader functions.
 _lazy_imports = {
     "AzureEngine": _load_azure_engine,
@@ -216,7 +224,9 @@ _lazy_imports = {
     "FasterQwenEngine": _load_fasterqwen_engine,
     "FasterQwenVoice": _load_fasterqwen_engine,
     "OmniVoiceEngine": _load_omni_voice_engine,
-    "OmniVoiceVoice": _load_omni_voice_engine,    
+    "OmniVoiceVoice": _load_omni_voice_engine,
+    "TypecastEngine": _load_typecast_engine,
+    "TypecastVoice": _load_typecast_engine,
 }
 
 
